@@ -1,10 +1,12 @@
 # LazyTower: An O(1) Replacement for Incremental Merkle Trees
 
+(這是草稿版本)
+
 LazyTower 是一個資料結構. 它的用途和 Incremental Merkle Tree (IMT) 一樣: 讓使用者可以逐步地 append items, 並且適用於 zero-knowledge 的 proof of membership.
 
 LazyTower append 一個 item 的 amortized cost 是 O(1).
 
-Proof 的 circuit complexity 是 O(log N), verification cost 是 O(1).
+Proof 的 circuit complexity 是 O(log N). Verification cost 是 O(1).
 
 ## 核心觀念
 
@@ -55,7 +57,7 @@ https://www.youtube.com/watch?v=7MsGTO6CuqI#t=4m45s
 
 我們分成 "水平/垂直" 兩階段來改進.
 
-## 水平的 level digest
+## 改進一: 水平的 level digests
 
 前面提到, 當一個 level 裝滿時, 我們會將其 digest 起來存到上層去. 如果我們選用的 digest function 可以 incremental 地計算, 則我們可以儲存最新的 digest 就好, 不用儲存 array of roots.
 
@@ -70,19 +72,23 @@ digest([a, b, c, d, e]) = H(H(H(H(a, b), c), d), e)
 ...
 ```
 
-因為每一層都只會從最後面 append, 所以每次只要 load / hash / save 就好$^1$. 不用從頭計算.
+因為每一層都只會從最後面 append, 所以每次都是 load / hash / save / update length. 不用從頭計算.
+
+
+<img src="./level_digests.png" width="431px">
+
 
 這樣在證明時, 每一層也只要 load 單一一個 level digest 就好.
 
 但這樣我們仍然有 O(log N) 個值要 load 進 circuit 裡. 還有改進的空間嗎?
 
-## 垂直的 digest of digests
+## 改進二: 垂直的 digest of digests
 
 對於每個 level 的 digests, 我們可以垂直由上往下計算一個 digest of digests. 用這個值來固定所有 digests.
 
 把頻繁更動的底層放在尾端, 這樣就可以藉由儲存 prefix 的結果來達成局部更新. 不用每次從頭計算.
 
-也就是說, 如果我們有儲存這些值
+也就是說, 我們會儲存這些值:
 ```
 digest([d4]) = d4
 digest([d4, d3]) = H(d4, d3)
@@ -91,9 +97,11 @@ digest([d4, d3, d2, d1]) = H(H(H(d4, d3), d2), d1)
 digest([d4, d3, d2, d1, d0]) = H(H(H(H(d4, d3), d2), d1), d0)
 ```
 
-那麼當最下層的 d0 變了的時候, 我們可以 load digest([d4, d3, d2, d1]), 再局部更新 d0 進去.
+<img src="./digest_of_digests.png" width="350px">
 
-當最下層的 d1 d0 變了的時候, 我們可以 load digest([d4, d3, d2]), 再局部更新 d1 d0 進去.
+當最下層的 d0 變了的時候, 我們可以 load H(H(H(d4, d3), d2), d1), 再局部更新 d0 進去.
+
+當最下層的 d1 d0 變了的時候, 我們可以 load H(H(d4, d3), d2), 再局部更新 d1 d0 進去.
 
 單一一層更新的 cost 也會是 constant. (load / hash / save)
 
@@ -105,10 +113,10 @@ digest([d4, d3, d2, d1, d0]) = H(H(H(H(d4, d3), d2), d1), d0)
 
 這樣在證明時, 我們只要 load O(1) 的資料就好了.
 
-(圖)
+<img src="./proof.png" width="751px">
 
-而由於 level digest 和 digest of digests 的設計, 原先的性質仍然有保留下來:
-1. 每層的 cost 都被同一個 constant bound 住
+而因為
+1. 每層的 cost 仍然可以用同一個 constant bound 住
 2. 越上層修改的頻率越低 (exponentially)
 因此新增 item 的 amortized cost 仍然是 O(1).
 
@@ -116,62 +124,31 @@ digest([d4, d3, d2, d1, d0]) = H(H(H(H(d4, d3), d2), d1), d0)
 
 以下我們觀察實作的結果.
 
-我們可以看到, 新增 item 的平均 gas 的確很快收斂到 constant.
+我們可以看到, 新增 item 的平均 gas 的確很快收斂到 constant. (21000 included)
 
-使用 width 較大的 tower, 平均的 gas 也較低. 但看來不會低於 70k. (21000 included)
+而使用 width 較大的 tower, 平均的 gas 也較低, 但有其極限.
 
-(圖)
+<img src="./average_gas_usage.png" width="728px">
 
-和 Incremental Merkle Tree 相比, 即便要容納很多 items, 使用者也不用擔心 gas 上升. 甚至也不用在一開始就決定容量上限.
+和 Incremental Merkle Tree 相比, 即便要容納大量的 items, 使用者也不用擔心 gas 上升. 甚至也不用在一開始就決定容量上限.
 
-(圖)
+<img src="./IMT_LazyTower.png" width="625px">
 
 雖然提高 width 能稍微降低 gas, 但也會增加證明時的 circuit complexity.
 
-(圖)
+<img src="./circuit_complexity.png" width="625px">
 
 Deploy 時通常會將 gas 和 circuit complexity 一起考慮. Width 取 4 到 7 是不錯的選擇.
 
 ## 結語
 
-不論要容納多少 item, LazyTower 平均花費的 gas 都是 O(1). Circuit complexity 保持在 O(log N). 需要用到 Incremental Merkle Tree 的專案都可以考慮使用 LazyTower.
+LazyTower 平均花費的 gas 是 O(1), Circuit complexity 為 O(log N), 且不用一開始就決定容量. 使用 Merkle Tree 的專案都可以考慮使用 LazyTower.
 
 ## Acknowledgement
 
 我在 2023 年初有了初步的想法. 感謝 Ethereum Foundation 的 grant 讓我完成實作. 也感謝 reviewer 們的幫助!
 
-Code 目前由 PSE team 維護. 採 open source license 釋出.
+實作目前由 PSE team 維護. 採 open source license 釋出.
 * Javascript: https://github.com/privacy-scaling-explorations/zk-kit
 * Solidity: https://github.com/privacy-scaling-explorations/zk-kit.solidity
 * Circom: https://github.com/privacy-scaling-explorations/zk-kit.circom
-
-
-
-
-## 
-
-可以的. 
-
-方法是: 我們在每個 level 橫向的建立一個 level digest, 讓這個 digest 可以固定整個 level. 成本攤在每次 append 中, 仍然是 constant.
-
-再來我們為每層的 digest 建立一個縱向的 digest of digests. 只要 load 這個值就能固定所有 level digests, 也就能固定每個 level 的 roots. 如果我們選取適當的 digest function, 則這個成本攤在每次 append 也會是 constant.
-
-這邊我們採用 Merkle-Damgard construction, 搭配一個 zk-friendly 的 hash function (如Poseidon hash).
-
-```
-digest([a]) = a
-digest([a, b]) = H(a, b)
-digest([a, b, c]) = H(H(a, b), c)
-digest([a, b, c, d]) = H(H(H(a, b), c), d)
-digest([a, b, c, d, e]) = H(H(H(H(a, b), c), d), e)
-...
-```
-
-橫向只要 append 就好:
-![alt text](image.png)
-
-縱向只要 update 尾端就好:
-![alt text](image-1.png)
-
-## Footnotes
-1. 除了 digest, 我們也要儲存長度. 以免當我們儲存了 H(H(a, b), c) 的時候, 有人謊稱 H(a, b) 曾被加入過.
