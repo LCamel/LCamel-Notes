@@ -37,9 +37,9 @@ https://www.youtube.com/watch?v=7MsGTO6CuqI#t=4m45s
 上一層在每 4 次 append item 會被修改到一次.<br>
 再上一層在每 16 次 append item 會被修改到一次.
 
-每一層修改的 cost 都不會超過同一個 constant C.
+我們可以找到一個 constant C, 使得每一層修改的 cost 都不會超過 C.
 
-平均來說, 一次 append 的 cost 不會超過
+這樣平均來說, 一次 append 的 cost 不會超過
 ```
 1 * C  +  1/4 * C  +  1/16 * C  + ...
 = 1.333 C
