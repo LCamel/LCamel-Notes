@@ -14,10 +14,14 @@ Items are appended starting from the bottom-most level. When a level is full, it
 
 https://www.youtube.com/watch?v=3QeJgxB9ZiQ
 
-For instance, by storing `digest([0, 1, 2, 3])`, we can later prove that items 0, 1, 2, and 3 have been appended.
+For instance, by storing
+```text
+digest([0, 1, 2, 3])
+```
+we can later prove that items 0, 1, 2, and 3 have been appended.
 
 By storing
-```
+```text
 digest([digest([0, 1, 2, 3]),
         digest([4, 5, 6, 7]),
         digest([8, 9, 10, 11]),
@@ -40,7 +44,7 @@ The level above that is modified once for every 16 appends.
 We can find a constant C such that the cost of any single-level modification does not exceed C.
 
 Thus, on average, the cost of a single append is no more than:
-```
+```text
 1 * C  +  1/4 * C  +  1/16 * C  + ...
 = 1.333 C
 ```
@@ -63,7 +67,7 @@ As mentioned earlier, when a level is full, we digest it and store the result in
 
 For example, we can use a Merkle-Damgård construction combined with a ZK-friendly hash function (such as Poseidon hash):
 
-```
+```text
 digest([a]) = a
 digest([a, b]) = H(a, b)
 digest([a, b, c]) = H(H(a, b), c)
@@ -87,7 +91,7 @@ For the digests of each level, we can compute a vertical digest of digests from 
 By placing the frequently changing lower levels at the end, we can perform localized updates by storing the prefix result, without recomputing from scratch.
 
 That is, we store the following values:
-```
+```text
 digest([d4]) = d4
 digest([d4, d3]) = H(d4, d3)
 digest([d4, d3, d2]) = H(H(d4, d3), d2)

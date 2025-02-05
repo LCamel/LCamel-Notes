@@ -14,10 +14,14 @@ Items 會從最底下的 level 被 append. 如果一層滿了, 就把整層 dige
 
 https://www.youtube.com/watch?v=3QeJgxB9ZiQ
 
-藉由儲存 `digest([0, 1, 2, 3])` 這個值, 我們可以在之後證明 item 0 1 2 3 曾經被 append 過.
+藉由儲存
+```text
+digest([0, 1, 2, 3])
+```
+這個值, 我們可以在之後證明 item 0 1 2 3 曾經被 append 過.
 
 藉由儲存
-```
+```text
 digest([digest([0, 1, 2, 3]),
         digest([4, 5, 6, 7]),
         digest([8, 9, 10, 11]),
@@ -40,7 +44,7 @@ https://www.youtube.com/watch?v=7MsGTO6CuqI#t=4m45s
 我們可以找到一個 constant C, 使得每一個單層修改的 cost 都不會超過 C.
 
 這樣平均來說, 一次 append 的 cost 不會超過
-```
+```text
 1 * C  +  1/4 * C  +  1/16 * C  + ...
 = 1.333 C
 ```
@@ -63,7 +67,7 @@ https://www.youtube.com/watch?v=7MsGTO6CuqI#t=4m45s
 
 比方說, 我們可以採用 Merkle-Damgård construction, 搭配一個 ZK-friendly 的 hash function (如Poseidon hash):
 
-```
+```text
 digest([a]) = a
 digest([a, b]) = H(a, b)
 digest([a, b, c]) = H(H(a, b), c)
@@ -89,7 +93,7 @@ digest([a, b, c, d, e]) = H(H(H(H(a, b), c), d), e)
 把頻繁更動的底層放在尾端, 這樣就可以藉由儲存 prefix 的結果來達成局部更新. 不用每次從頭計算.
 
 也就是說, 我們會儲存這些值:
-```
+```text
 digest([d4]) = d4
 digest([d4, d3]) = H(d4, d3)
 digest([d4, d3, d2]) = H(H(d4, d3), d2)
