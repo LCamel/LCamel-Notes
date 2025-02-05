@@ -14,7 +14,7 @@ Items 會從最底下的 level 被 append. 如果一層滿了, 就把整層 dige
 
 https://www.youtube.com/watch?v=3QeJgxB9ZiQ
 
-藉由儲存 `digest([0, 1, 2, 3])` 這個值, 我們可以證明 item 0 1 2 3 曾經被 append 過.
+藉由儲存 `digest([0, 1, 2, 3])` 這個值, 我們可以在之後證明 item 0 1 2 3 曾經被 append 過.
 
 藉由儲存
 ```
@@ -23,7 +23,7 @@ digest([digest([0, 1, 2, 3]),
         digest([8, 9, 10, 11]),
         digest([12, 13, 14, 15])])
 ```
-這個值, 我們可以證明 item 0 ... 15 曾經被 append 過.
+這個值, 我們可以在之後證明 item 0 ... 15 曾經被 append 過.
 
 我們可以觀察到, tower 裡面儲存的每一格都是一個 Merkle root. 分別固定了 4^0, 4^1, 4^2 ... 個 item.
 
@@ -37,7 +37,7 @@ https://www.youtube.com/watch?v=7MsGTO6CuqI#t=4m45s
 上一層在每 4 次 append item 會被修改到一次.<br>
 再上一層在每 16 次 append item 會被修改到一次.
 
-我們可以找到一個 constant C, 使得每一層修改的 cost 都不會超過 C.
+我們可以找到一個 constant C, 使得每一個單層修改的 cost 都不會超過 C.
 
 這樣平均來說, 一次 append 的 cost 不會超過
 ```
@@ -49,7 +49,7 @@ https://www.youtube.com/watch?v=7MsGTO6CuqI#t=4m45s
 
 當我們想證明某個 item 曾經被 append 過, 但是又不想直接揭露是哪個 item 時, 可以用 zero-knowledge proof 來證明其 membership.
 
-我們可以用傳統的 Merkle proof 單獨證明一個 item 屬於 tower 中的某個 root. 比方說: "我的 item 隱藏在 level 10 的第二個 root 的 4^10 個 item 之中".
+我們可以用傳統的 Merkle proof 證明一個 item 屬於 tower 中的某個單一的 root. 比方說: "我的 item 隱藏在 level 10 的第二個 root 的 4^10 個 item 之中".
 
 當我們希望保留完整的 privacy 時, 則應該把 tower 中所有的 roots 都 load 起來, 再證明其 membership. 但這樣需要 O(log N) 的 cost, 並不理想.
 
@@ -61,7 +61,7 @@ https://www.youtube.com/watch?v=7MsGTO6CuqI#t=4m45s
 
 前面提到, 當一個 level 裝滿時, 我們會將其 digest 起來存到上層去. 如果我們選用的 digest function 可以 incremental 地計算, 則我們可以儲存最新的 digest 就好, 不用儲存 array of roots.
 
-比方說, 我們可以採用 Merkle-Damgard construction, 搭配一個 ZK-friendly 的 hash function (如Poseidon hash):
+比方說, 我們可以採用 Merkle-Damgård construction, 搭配一個 ZK-friendly 的 hash function (如Poseidon hash):
 
 ```
 digest([a]) = a
@@ -72,7 +72,7 @@ digest([a, b, c, d, e]) = H(H(H(H(a, b), c), d), e)
 ...
 ```
 
-因為每一層都只會從最後面 append, 所以每次都是 load / hash / save / update length. 不用從頭計算.
+因為每一層都只會從最後面 append, 所以每次都是固定 load / hash / save / update length. 不用從頭計算.
 
 
 <img src="./level_digests.png" width="431px">
