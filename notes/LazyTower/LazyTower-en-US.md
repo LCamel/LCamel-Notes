@@ -78,7 +78,7 @@ digest([a, b, c, d, e]) = H(H(H(H(a, b), c), d), e)
 
 Since each level only appends data at the end, every operation requires a fixed set of steps — loading, hashing, saving, and updating the length — without the need to recompute everything from scratch.
 
-<img src="./level_digests.png" width="431px">
+<img src="https://lcamel.github.io/LCamel-Notes/LazyTower/level_digests.png" width="431px">
 
 Thus, during the proof, each level only needs to load a single level digest.
 
@@ -99,7 +99,7 @@ digest([d4, d3, d2, d1]) = H(H(H(d4, d3), d2), d1)
 digest([d4, d3, d2, d1, d0]) = H(H(H(H(d4, d3), d2), d1), d0)
 ```
 
-<img src="./digest_of_digests.png" width="350px">
+<img src="https://lcamel.github.io/LCamel-Notes/LazyTower/digest_of_digests.png" width="350px">
 
 When the lowest level d0 changes, we can load H(H(H(d4, d3), d2), d1) and update d0 locally.
 
@@ -113,7 +113,7 @@ Thus, we obtain a digest of digests that fixes each level's digest. Each level d
 
 This means that during the proof, we only need to load O(1) data.
 
-<img src="./proof.png" width="751px">
+<img src="https://lcamel.github.io/LCamel-Notes/LazyTower/proof.png" width="751px">
 
 Because:
 1. The cost at each level remains bounded by a constant.
@@ -129,15 +129,15 @@ We can see that the average gas cost for appending an item quickly converges to 
 
 Moreover, a tower with a larger width results in a lower average gas usage, though with limits.
 
-<img src="./average_gas_usage.png" width="728px">
+<img src="https://lcamel.github.io/LCamel-Notes/LazyTower/average_gas_usage.png" width="728px">
 
 Compared to the Incremental Merkle Tree, even when accommodating a large number of items, users do not have to worry about rising gas costs, nor do they need to determine a capacity limit from the start.
 
-<img src="./IMT_LazyTower.png" width="625px">
+<img src="https://lcamel.github.io/LCamel-Notes/LazyTower/IMT_LazyTower.png" width="625px">
 
 Although increasing the width can slightly reduce gas usage, it also increases circuit complexity during the proof.
 
-<img src="./circuit_complexity.png" width="625px">
+<img src="https://lcamel.github.io/LCamel-Notes/LazyTower/circuit_complexity.png" width="625px">
 
 During deployment, both gas cost and circuit complexity are considered. A width of 4 to 7 is a reasonable choice.
 
