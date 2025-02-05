@@ -118,6 +118,7 @@ digest([d4, d3, d2, d1, d0]) = H(H(H(H(d4, d3), d2), d1), d0)
 而因為
 1. 每層的 cost 仍然可以用同一個 constant bound 住
 2. 越上層修改的頻率越低 (exponentially)
+
 因此新增 item 的 amortized cost 仍然是 O(1).
 
 ## 實作
